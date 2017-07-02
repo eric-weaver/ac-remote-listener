@@ -1,3 +1,5 @@
+import constants
+import settings
 from vendored.lirc import Lirc
 from pubnub.callbacks import SubscribeCallback
 from pubnub.enums import PNStatusCategory
@@ -5,7 +7,7 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
 pnconfig = PNConfiguration()
-pnconfig.subscribe_key = "<subscribe_key>"
+pnconfig.subscribe_key = settings.SUBSCRIBE_KEY
 pnconfig.ssl = False
 
 pubnub = PubNub(pnconfig)
@@ -13,7 +15,7 @@ pubnub = PubNub(pnconfig)
 lirc = Lirc()
 
 
-class MySubscribeCallback(SubscribeCallback):
+class KeyPressSubscribeCallback(SubscribeCallback):
     def presence(self, pubnub, presence):
         pass  # handle incoming presence data
 
@@ -36,8 +38,23 @@ class MySubscribeCallback(SubscribeCallback):
             # encrypt messages and on live data feed it received plain text.
 
     def message(self, pubnub, message):
-        lirc.send_once('frigidaireAC', message.message)
+        key = message.message
+        if valid_key_press(key):
+            lirc.send_once(constants.REMOTE_NAME, key)
 
 
-pubnub.add_listener(MySubscribeCallback())
-pubnub.subscribe().channels('test').execute()
+def valid_key_press(message):
+    if message in constants.VALID_KEYS:
+        return True
+    else:
+        return False
+
+
+def main():
+    keypress_listener = KeyPressSubscribeCallback()
+    pubnub.add_listener(keypress_listener)
+    print('Subscribing to {}'.format(constants.REMOTE_NAME))
+    pubnub.subscribe().channels(constants.REMOTE_NAME).execute()
+
+if __name__ == '__main__':
+    main()
