@@ -1,4 +1,5 @@
 import constants
+import logging
 import settings
 from vendored.lirc import Lirc
 from pubnub.callbacks import SubscribeCallback
@@ -6,9 +7,12 @@ from pubnub.enums import PNStatusCategory
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
+logger = logging.getLogger()
+
 pnconfig = PNConfiguration()
 pnconfig.subscribe_key = settings.SUBSCRIBE_KEY
-pnconfig.ssl = False
+pnconfig.publish_key = settings.PUBLISH_KEY
+pnconfig.ssl = True
 
 pubnub = PubNub(pnconfig)
 
@@ -21,26 +25,20 @@ class KeyPressSubscribeCallback(SubscribeCallback):
 
     def status(self, pubnub, status):
         if status.category == PNStatusCategory.PNUnexpectedDisconnectCategory:
-            pass  # This event happens when radio / connectivity is lost
-
+            logger.info('Disconnected')
         elif status.category == PNStatusCategory.PNConnectedCategory:
-            # Connect event. You can do stuff like publish, and know you'll get it.
-            # Or just use the connected event to confirm you are subscribed for
-            # UI / internal notifications, etc
-            print('Connected')
+            logger.info('Connected')
         elif status.category == PNStatusCategory.PNReconnectedCategory:
-            pass
-            # Happens as part of our regular operation. This event happens when
-            # radio / connectivity is lost, then regained.
-        elif status.category == PNStatusCategory.PNDecryptionErrorCategory:
-            pass
-            # Handle message decryption error. Probably client configured to
-            # encrypt messages and on live data feed it received plain text.
+            logger.info('Reconnected')
 
     def message(self, pubnub, message):
         key = message.message
         if valid_key_press(key):
+            logging.info('Sending {} key press'.format(key))
             lirc.send_once(constants.REMOTE_NAME, key)
+
+            # Send an acknowledgement message with the key that was pressed
+            pubnub.publish().channel(constants.CHANNEL_ACK).message(key).async(publish_callback)
 
 
 def valid_key_press(message):
@@ -50,11 +48,18 @@ def valid_key_press(message):
         return False
 
 
+def publish_callback(envelope, status):
+    if not status.is_error():
+        logger.info('Successfully published message')
+    else:
+        logger.error('Error publishing message')
+
+
 def main():
     keypress_listener = KeyPressSubscribeCallback()
     pubnub.add_listener(keypress_listener)
-    print('Subscribing to {}'.format(constants.REMOTE_NAME))
-    pubnub.subscribe().channels(constants.REMOTE_NAME).execute()
+    logger.info('Subscribing to {}'.format(constants.CHANNEL_REMOTE))
+    pubnub.subscribe().channels(constants.CHANNEL_REMOTE).execute()
 
 if __name__ == '__main__':
     main()
