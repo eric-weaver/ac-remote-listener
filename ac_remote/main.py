@@ -2,12 +2,14 @@ import constants
 import logging
 import settings
 from vendored.lirc import Lirc
+import pubnub
 from pubnub.callbacks import SubscribeCallback
 from pubnub.enums import PNStatusCategory
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
 logger = logging.getLogger()
+pubnub.set_stream_logger('pubnub', logging.DEBUG)
 
 pnconfig = PNConfiguration()
 pnconfig.subscribe_key = settings.SUBSCRIBE_KEY
@@ -15,6 +17,7 @@ pnconfig.publish_key = settings.PUBLISH_KEY
 pnconfig.ssl = True
 
 pubnub = PubNub(pnconfig)
+
 
 lirc = Lirc()
 
