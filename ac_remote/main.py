@@ -9,7 +9,7 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
 logger = logging.getLogger()
-pubnub.set_stream_logger('pubnub', logging.DEBUG)
+pubnub.set_stream_logger('pubnub', logging.WARNING)
 
 pnconfig = PNConfiguration()
 pnconfig.subscribe_key = settings.SUBSCRIBE_KEY
