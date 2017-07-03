@@ -16,7 +16,7 @@ pnconfig.subscribe_key = settings.SUBSCRIBE_KEY
 pnconfig.publish_key = settings.PUBLISH_KEY
 pnconfig.ssl = True
 
-pubnub = PubNub(pnconfig)
+pubnub_client = PubNub(pnconfig)
 
 
 lirc = Lirc()
@@ -41,7 +41,7 @@ class KeyPressSubscribeCallback(SubscribeCallback):
             lirc.send_once(constants.REMOTE_NAME, key)
 
             # Send an acknowledgement message with the key that was pressed
-            pubnub.publish().channel(constants.CHANNEL_ACK).message(key).async(publish_callback)
+            pubnub_client.publish().channel(constants.CHANNEL_ACK).message(key).async(publish_callback)
 
 
 def valid_key_press(message):
@@ -60,9 +60,9 @@ def publish_callback(envelope, status):
 
 def main():
     keypress_listener = KeyPressSubscribeCallback()
-    pubnub.add_listener(keypress_listener)
+    pubnub_client.add_listener(keypress_listener)
     logger.info('Subscribing to {}'.format(constants.CHANNEL_REMOTE))
-    pubnub.subscribe().channels(constants.CHANNEL_REMOTE).execute()
+    pubnub_client.subscribe().channels(constants.CHANNEL_REMOTE).execute()
 
 if __name__ == '__main__':
     main()
