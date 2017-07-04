@@ -47,7 +47,7 @@ class KeyPressSubscribeCallback(SubscribeCallback):
             lirc.send_once(constants.REMOTE_NAME, key)
 
             # Send an acknowledgement message with the key that was pressed
-            pubnub_client.publish().channel(constants.CHANNEL_ACK).message(key).async(publish_callback)
+            pubnub_client.publish().channel(constants.CHANNEL_PUBLISH).message(key).async(publish_callback)
 
 
 def valid_key_press(message):
@@ -67,8 +67,8 @@ def publish_callback(envelope, status):
 def main():
     keypress_listener = KeyPressSubscribeCallback()
     pubnub_client.add_listener(keypress_listener)
-    logger.info('Subscribing to {}'.format(constants.CHANNEL_REMOTE))
-    pubnub_client.subscribe().channels(constants.CHANNEL_REMOTE).execute()
+    logger.info('Subscribing to {}'.format(constants.CHANNEL_SUBSCRIBE))
+    pubnub_client.subscribe().channels(constants.CHANNEL_SUBSCRIBE).execute()
 
 if __name__ == '__main__':
     main()
