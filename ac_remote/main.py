@@ -1,14 +1,20 @@
-import constants
+from __future__ import absolute_import
+
 import logging
+
+import constants
 import settings
+from logger import config_logging
 from vendored.lirc import Lirc
+
 import pubnub
 from pubnub.callbacks import SubscribeCallback
 from pubnub.enums import PNStatusCategory
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
-logger = logging.getLogger()
+
+logger = config_logging(settings.LOG_LEVEL, settings.LOG_FILE)
 pubnub.set_stream_logger('pubnub', logging.WARNING)
 
 pnconfig = PNConfiguration()
